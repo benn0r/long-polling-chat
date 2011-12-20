@@ -1,0 +1,4 @@
+/fetch
+	Waits for a message
+/push?message=foo
+	Sends a message to all with /fetch connected clients
