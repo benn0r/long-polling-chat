@@ -4,28 +4,75 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 	<title>Chat Client</title>
 	<script type="text/javascript" src="jquery.js"></script>
+	<SCRIPT type="text/javascript">
+	<!--
+	HTTP_GET_VARS=new Array();
+	strGET=document.location.search.substr(1,document.location.search.length);
+	if(strGET!='')
+	    {
+	    gArr=strGET.split('&');
+	    for(i=0;i<gArr.length;++i)
+	        {
+	        v='';vArr=gArr[i].split('=');
+	        if(vArr.length>1){v=vArr[1];}
+	        HTTP_GET_VARS[unescape(vArr[0])]=unescape(v);
+	        }
+	    }
+	 
+	function GET(v)
+	{
+	if(!HTTP_GET_VARS[v]){return 'undefined';}
+	return HTTP_GET_VARS[v];
+	}
+	// -->
+	</SCRIPT>
 	<script type="text/javascript">
-		var username = '';
+		var u = GET('u');
+		
+		var fetchall = function() {
+			$.get('/fetchall?u=' + u, function(result) {
+				var json = jQuery.parseJSON(result);
+				for (var i = 0; i < json.length; i++) {
+					var m = json[i];
+					
+					var date = new Date();
+					date.setTime(m.time);
+					var time = date.getHours() + ':' + date.getMinutes();
+					$('#chatbox').append('<p><strong>' + m.user + '</strong> [' + time + ']: ' + m.message + '</p>');
+				}
+				
+				$("#chatbox").scrollTop($("#chatbox")[0].scrollHeight);
+						
+				// start first fetch
+				fetch();
+			});
+		};
 	
 		var fetch = function() {
 			$('#debug').html('Connected...');
 			
 			$.ajax({
-				url: '/fetch?user=' + username,
+				url: '/fetch?u=' + u,
 				context: document.body,
 				success: function(result) {
 					$('#debug').html('Response received!');
 										
-					var result = result.split('\n');
-					for (var i = 0; i < (result.length - 2); i++) {
-						var json = jQuery.parseJSON(result[i]);
-						$('#chatbox').prepend('<p><strong>' + json.user + '</strong>: ' + json.message + '</p>');
+					var json = jQuery.parseJSON(result);
+					for (var i = 0; i < json.length; i++) {
+						var m = json[i];
+						
+						var date = new Date();
+						date.setTime(m.time);
+						var time = date.getHours() + ':' + date.getMinutes();
+						$('#chatbox').append('<p><strong>' + m.user + '</strong> [' + time + ']: ' + m.message + '</p>');
 					}
+					
+					$("#chatbox").scrollTop($("#chatbox")[0].scrollHeight);
 										
 					fetch();
 				},
 				error: function() {
-					$('#debug').html('Error!');
+					$('#debug').html('Disconnected!');
 					
 					setTimeout(function() {
 						fetch();
@@ -35,17 +82,17 @@
 		};
 		
 		var push = function() {
-			$.get('/push?message=' + $('input[name=message]').val() + '&user=' + username, function(result) {
+			$.get('/push?m=' + $('input[name=message]').val() + '&u=' + u, function(result) {
 				$('input[name=message]').val('');
 			});
 		};
 		
-		var register = function() {
+		/*var register = function() {
 			$.get('/register?username=' + $('input[name=username]').val(), function(result) {
 				username = result;
 				fetch();
 			});
-		};
+		};*/
 	
 		$(document).ready(function() {
 			$('input[name=message]').keypress(function(e) {
@@ -58,9 +105,7 @@
 				push();
 			});
 			
-			$('input[name=register]').click(function(e) {
-				register();
-			});
+			fetchall();
 		});
 	</script>
 	<style type="text/css">
@@ -68,6 +113,12 @@
 		width: 500px;
 		height: 200px;
 		overflow: auto;
+		padding: 0px;
+		margin: 0px;
+	}
+	p {
+		padding: 0px 0px 5px 0px;
+		margin: 0px;
 	}
 	</style>
 </head>
@@ -76,8 +127,6 @@
 	<form action="" method="post" onsubmit="return false;">
 		<p><input type="text" name="message" />
 		<input type="button" name="send" value="Send" /> <span id="debug"></span></p>
-		<p><input type="text" name="username" />
-		<input type="button" name="register" value="Register" /></p>
 	</form>
 </body>
 </html>

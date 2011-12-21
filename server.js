@@ -3,10 +3,10 @@
  * 
  * @author benn0r <admin@benn0r.ch>
  * @since 2011/12/20
- * @version 2011/12/20
+ * @version 2011/12/21
  */
 
-// Required modules
+// include required modules
 var http = require('http');
 var sys = require('util');
 var url = require('url');
@@ -14,14 +14,37 @@ var fs = require('fs');
 var crypto = require('crypto');
 var qs = require('querystring');
 
-var port = 80; // server port
-var clients = []; // list with all connected clients
+/**
+ * port for the server
+ * 
+ * @var int
+ */
+var port = 80;
+
+/**
+ * list with all the clients are waiting for messages
+ * 
+ * @var array responseobjects
+ */
+var clients = [];
+
+/**
+ * contains all pushed messages
+ * 
+ * @var array<string> json
+ */
 var messages = [];
-var users = [];
+
+/**
+ * key is userid and content is the last
+ * from user received messageid
+ * 
+ * @var int last received messageid
+ */
+var history = [];
 
 http.createServer(function (request, response) {
 	var urlparts = url.parse(request.url, true);
-	//console.log(urlparts.pathname);
 	
 	switch (urlparts.pathname) {
 		/**
@@ -40,41 +63,66 @@ http.createServer(function (request, response) {
 			users[md5] = urlparts.query['username']; // save hash for later use
 			break;
 		case '/push':
-			var message = '{"user":"' + users[urlparts.query['user']] + '","message":"' + urlparts.query['message'].replace(/"/gi, '\\"') + '"}';
-			console.log('client pushed new message: ' + message);
+			// replace " with \" (" will destroy the beautiful json)
+			var message = urlparts.query['m'].replace(/"/gi, '\\"');
 			
-			for (var i = 0; i < clients.length; i++) {
-				var client = clients[i];
-				client.messages.push(message);
-				console.log('  ' + client.hash + ': ' + client.messages.length);
-			}
+			// create json and push to message stack
+			messages.push('{"user":"' + urlparts.query['u'] + '","time":"' + 
+					new Date().getTime().toString() + '","message":"' + message + '"}');
 			
+			// we have all we need, close the connection
 			response.writeHead(200, {'Content-Type': 'text/plain'});
 			response.end('thx\n');
 			
+			console.log('client pushed new message, total messages: ' + messages.length);
+						
 			send();
 			break;
-		case '/fetch':
-			// client is waiting for messages
+		case '/fetchall':
+			var answer = '';
+			for (var i = 0; i < messages.length; i++) {
+				answer = answer + messages[i] + ',';
+			}
+						
+			// add last messageid to userhistory
+			history[urlparts.query['u']] = i;
 			
-			var client = null;
-			for (var i = 0; i < clients.length; i++) {
-				if (clients[i].hash == urlparts.query['user']) {
-					client = clients[i];
-					clients[i].response = response;
-					
-					console.log('welcome back');
-				}
+			console.log(urlparts.query['u'] + ' fetched all messages');
+
+			response.writeHead(200, {'Content-Type': 'text/plain'});
+			response.end('[' + answer.substring(0, answer.length - 1) + ']');
+			break;
+		case '/fetch':
+			var lastmessageid = history[urlparts.query['u']];
+			if (lastmessageid == undefined) {
+				// history entry was never made, create a new one
+				lastmessageid = history[urlparts.query['u']] = 0;
 			}
 			
-			if (client == null) {
-				client = new Object();
-				client.hash = urlparts.query['user'];
+			// check for messages
+			if (messages.length > lastmessageid) {
+				// we got new messages for you
+				var answer = '';
+				for (var i = lastmessageid; i < messages.length; i++) {
+					answer = answer + messages[i] + ',';
+				}
+							
+				// add last messageid to userhistory
+				history[urlparts.query['u']] = i;
+				
+				console.log(urlparts.query['u'] + ' fetched some messages');
+
+				response.writeHead(200, {'Content-Type': 'text/plain'});
+				response.end('[' + answer.substring(0, answer.length - 1) + ']');
+			} else {
+				// add client to waitinglist
+				var client = new Object();
+				client.u = urlparts.query['u'];
 				client.response = response;
-				client.messages = new Array();
+				
+				console.log(urlparts.query['u'] + ' waits for some messages');
 				
 				clients.push(client);
-				console.log('new client connected');
 			}
 			break;
 		default:
@@ -104,26 +152,40 @@ http.createServer(function (request, response) {
  * all the connections
  */
 function send() {
+	var newclients = [];
+	
 	for (var i = 0; i < clients.length; i++) {
 		var client = clients[i];
+				
+		var lastmessageid = history[client.u];
+		if (lastmessageid == undefined) {
+			// history entry was never made, create a new one
+			lastmessageid = history[client.u] = 0;
+		}
 		
-		if (client.response != null) {
+		// check for messages
+		if (messages.length > lastmessageid) {
+			// we got new messages for you
 			var answer = '';
-			for (var j = 0; j < client.messages.length; j++) {
-				answer = answer + client.messages[j] + '\n';
+			for (var j = lastmessageid; j < messages.length; j++) {
+				answer = answer + messages[j] + ',';
 			}
+						
+			// add last messageid to userhistory
+			history[client.u] = j;
 
 			client.response.writeHead(200, {'Content-Type': 'text/plain'});
-			client.response.end(answer + '\n');
+			client.response.end('[' + answer.substring(0, answer.length - 1) + ']');
 			
-			// reset messages and response
-			client.messages = new Array();
-			client.response = null;
-			
-			// really needed?
-			clients[i] = client;
+			console.log(client.u + ' fetched some messages after waiting');
+		} else {
+			// let the client wait moar
+			newclients.push(client);
 		}
 	}
+	
+	// overwrite client array
+	clients = newclients;
 }
 
 console.log('Server running at http://127.0.0.1:' + port + '/');
