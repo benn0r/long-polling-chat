@@ -26,21 +26,6 @@ http.createServer(function (request, response) {
 	//console.log(urlparts.pathname);
 	
 	switch (urlparts.pathname) {
-		case '/client.html':
-			fs.readFile('./client.html', function (err, data) {
-				response.writeHead(200, {'Content-Type': 'text/html'});
-				response.end(data);  
-			});
-
-			break;
-		case '/jquery.js':
-			fs.readFile('./jquery.js', function (err, data) {
-				response.writeHead(200, {'Content-Type': 'text/javascript'});
-				response.end(data);  
-			});
-
-			break;
-			
 		/**
 		 * Called form client with parameter "username"
 		 * Returns an unique md5 hash
@@ -69,6 +54,17 @@ http.createServer(function (request, response) {
 			// register client
 			clients.push(response);
 			console.log('client connected');
+			break;
+		default:
+			fs.readFile('./client' + urlparts.pathname, function (err, data) {
+				if (urlparts.pathname.indexOf('.js') != -1) {
+					response.writeHead(200, {'Content-Type': 'text/javascript'});
+				} else if (urlparts.pathname.indexOf('.html') != -1) {
+					response.writeHead(200, {'Content-Type': 'text/html'});
+				}
+				response.end(data);  
+			});
+		
 			break;
 	}
 }).listen(port);
