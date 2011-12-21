@@ -7,17 +7,43 @@
 	<script type="text/javascript">
 		var fetch = function() {
 			$.get('http://localhost:1007/fetch', function(result) {
-				$('#chatbox').append(result);
+				$('#chatbox').prepend('<p>' + result + '</p>');
 				fetch();
+			});
+		};
+		
+		var push = function() {
+			$.get('http://localhost:1007/push?message=' + $('input[name=message]').val(), function(result) {
+				$('input[name=message]').val('');
 			});
 		};
 	
 		$(document).ready(function() {
 			fetch();
+			
+			$('input[name=message]').keypress(function(e) {
+				if(e.which == 13) {
+					push();
+				}
+			});
+			$('input[name=send]').click(function(e) {
+				push();
+			});
 		});
 	</script>
+	<style type="text/css">
+	#chatbox {
+		width: 500px;
+		height: 200px;
+		overflow: auto;
+	}
+	</style>
 </head>
 <body>
 	<div id="chatbox"></div>
+	<form action="" method="post" onsubmit="return false;">
+		<input type="text" name="message" />
+		<input type="button" name="send" value="Send" />
+	</form>
 </body>
 </html>

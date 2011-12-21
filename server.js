@@ -13,14 +13,14 @@ var url = require('url');
 var fs = require('fs');
 
 var port = 1007; // server port
-var clients = []; // list with all connected clients
+var clients = new Array(); // list with all connected clients
 var messages = [];
 
 var message = ''; // active message
 
 http.createServer(function (request, response) {
 	var urlparts = url.parse(request.url);
-	console.log(urlparts.pathname);
+	//console.log(urlparts.pathname);
 	
 	switch (urlparts.pathname) {
 		case '/client.html':
@@ -62,13 +62,15 @@ http.createServer(function (request, response) {
 function send() {
 	for (var i = 0; i < clients.length; i++) {
 		var client = clients[i];
+		
+		console.log('send message: ' + message);
 
 		client.writeHead(200, {'Content-Type': 'text/plain'});
 		client.end(message + '\n');
 	}
 	
 	// @todo good or bad? maybe bad
-	clients = [];
+	clients = new Array();
 }
 
 console.log('Server running at http://127.0.0.1:' + port + '/');
