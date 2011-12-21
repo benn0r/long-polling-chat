@@ -58,16 +58,18 @@
 					$('#debug').html('Response received!');
 										
 					var json = jQuery.parseJSON(result);
-					for (var i = 0; i < json.length; i++) {
-						var m = json[i];
+					if (json != null) {
+						for (var i = 0; i < json.length; i++) {
+							var m = json[i];
+							
+							var date = new Date();
+							date.setTime(m.time);
+							var time = date.getHours() + ':' + date.getMinutes();
+							$('#chatbox').append('<p><strong>' + m.user + '</strong> [' + time + ']: ' + m.message + '</p>');
+						}
 						
-						var date = new Date();
-						date.setTime(m.time);
-						var time = date.getHours() + ':' + date.getMinutes();
-						$('#chatbox').append('<p><strong>' + m.user + '</strong> [' + time + ']: ' + m.message + '</p>');
+						$("#chatbox").scrollTop($("#chatbox")[0].scrollHeight);
 					}
-					
-					$("#chatbox").scrollTop($("#chatbox")[0].scrollHeight);
 										
 					fetch();
 				},
