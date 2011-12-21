@@ -7,7 +7,7 @@
 	<script type="text/javascript">
 		var fetch = function() {
 			$.ajax({
-				url: 'http://localhost:1007/fetch',
+				url: '/fetch',
 				context: document.body,
 				success: function(result) {
 					var json = jQuery.parseJSON(result);
@@ -15,7 +15,7 @@
 					fetch();
 				},
 				error: function() {
-					//fetch();
+					fetch();
 				}
 			});
 		};
@@ -23,13 +23,13 @@
 		var username = '';
 		
 		var push = function() {
-			$.get('http://localhost:1007/push?message=' + $('input[name=message]').val() + '&user=' + username, function(result) {
+			$.get('/push?message=' + $('input[name=message]').val() + '&user=' + username, function(result) {
 				$('input[name=message]').val('');
 			});
 		};
 		
 		var register = function() {
-			$.get('http://localhost:1007/register?username=' + $('input[name=username]').val(), function(result) {
+			$.get('/register?username=' + $('input[name=username]').val(), function(result) {
 				username = result;
 			});
 		};
