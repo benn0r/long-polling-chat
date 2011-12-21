@@ -153,6 +153,7 @@ http.createServer(function (request, response) {
  */
 function send() {
 	var newclients = [];
+	var newhistory = [];
 	
 	for (var i = 0; i < clients.length; i++) {
 		var client = clients[i];
@@ -172,7 +173,7 @@ function send() {
 			}
 						
 			// add last messageid to userhistory
-			history[client.u] = j;
+			newhistory[client.u] = j;
 
 			client.response.writeHead(200, {'Content-Type': 'text/plain'});
 			client.response.end('[' + answer.substring(0, answer.length - 1) + ']');
@@ -181,11 +182,15 @@ function send() {
 		} else {
 			// let the client wait moar
 			newclients.push(client);
+			newhistory[client.u] = history[client.u];
 		}
 	}
 	
 	// overwrite client array
 	clients = newclients;
+	
+	// overwrite history
+	history = newhistory;
 }
 
 console.log('Server running at http://127.0.0.1:' + port + '/');
