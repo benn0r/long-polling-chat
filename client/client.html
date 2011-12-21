@@ -5,9 +5,11 @@
 	<title>Chat Client</title>
 	<script type="text/javascript" src="jquery.js"></script>
 	<script type="text/javascript">
+		var username = '';
+	
 		var fetch = function() {
 			$.ajax({
-				url: '/fetch',
+				url: '/fetch?user=' + username,
 				context: document.body,
 				success: function(result) {
 					var json = jQuery.parseJSON(result);
@@ -20,8 +22,6 @@
 			});
 		};
 		
-		var username = '';
-		
 		var push = function() {
 			$.get('/push?message=' + $('input[name=message]').val() + '&user=' + username, function(result) {
 				$('input[name=message]').val('');
@@ -31,12 +31,11 @@
 		var register = function() {
 			$.get('/register?username=' + $('input[name=username]').val(), function(result) {
 				username = result;
+				fetch();
 			});
 		};
 	
 		$(document).ready(function() {
-			fetch();
-			
 			$('input[name=message]').keypress(function(e) {
 				if(e.which == 13) {
 					push();

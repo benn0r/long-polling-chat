@@ -19,8 +19,6 @@ var clients = []; // list with all connected clients
 var messages = [];
 var users = [];
 
-var message = ''; // active message
-
 http.createServer(function (request, response) {
 	var urlparts = url.parse(request.url, true);
 	//console.log(urlparts.pathname);
@@ -42,8 +40,13 @@ http.createServer(function (request, response) {
 			users[md5] = urlparts.query['username']; // save hash for later use
 			break;
 		case '/push':
-			message = '{"user":"' + users[urlparts.query['user']] + '","message":"' + urlparts.query['message'] + '"}';
+			var message = '{"user":"' + users[urlparts.query['user']] + '","message":"' + urlparts.query['message'] + '"}';
 			console.log('client pushed new message: ' + message);
+			
+			for (var i = 0; i < clients.length; i++) {
+				var client = clients[i];
+				client.messages.push(message);
+			}
 			
 			response.writeHead(200, {'Content-Type': 'text/plain'});
 			response.end('thx\n');
@@ -51,18 +54,43 @@ http.createServer(function (request, response) {
 			send();
 			break;
 		case '/fetch':
-			// register client
-			clients.push(response);
-			console.log('client connected');
+			// client is waiting for messages
+			
+			var client = null;
+			for (var i = 0; i < clients.length; i++) {
+				if (clients[i].hash == urlparts.query['user']) {
+					client = clients[i];
+					clients[i].response = response;
+				}
+			}
+			
+			if (client == null) {
+				client = new Object();
+				client.hash = urlparts.query['user'];
+				client.response = response;
+				client.messages = new Array();
+				
+				clients.push(client);
+			}
+			
+			console.log('client waiting for messages');
 			break;
 		default:
+			// check if file exists
 			fs.readFile('./client' + urlparts.pathname, function (err, data) {
-				if (urlparts.pathname.indexOf('.js') != -1) {
-					response.writeHead(200, {'Content-Type': 'text/javascript'});
-				} else if (urlparts.pathname.indexOf('.html') != -1) {
-					response.writeHead(200, {'Content-Type': 'text/html'});
+				if (!err) {
+					if (urlparts.pathname.indexOf('.js') != -1) {
+						response.writeHead(200, {'Content-Type': 'text/javascript'});
+					} else if (urlparts.pathname.indexOf('.html') != -1) {
+						response.writeHead(200, {'Content-Type': 'text/html'});
+					} else if (urlparts.pathname.indexOf('.css') != -1) {
+						response.writeHead(200, {'Content-Type': 'text/stylesheet'});
+					}
+					response.end(data);
+				} else {
+					response.writeHead(404, {'Content-Type': 'text/html'});
+					response.end('404 NOT FOUND');
 				}
-				response.end(data);  
 			});
 		
 			break;
@@ -77,14 +105,20 @@ function send() {
 	for (var i = 0; i < clients.length; i++) {
 		var client = clients[i];
 		
-		console.log('send message: ' + message);
+		if (client.response != null) {
+			var answer = '';
+			for (var j = 0; j < client.messages.length; j++) {
+				answer = answer + client.messages[j] + '\n';
+			}
 
-		client.writeHead(200, {'Content-Type': 'text/plain'});
-		client.end(message + '\n');
+			client.response.writeHead(200, {'Content-Type': 'text/plain'});
+			client.response.end(answer + '\n');
+			
+			// reset messages and response
+			client.messages = new Array();
+			client.response = null;
+		}
 	}
-	
-	// @todo good or bad? maybe bad
-	clients = new Array();
 }
 
 console.log('Server running at http://127.0.0.1:' + port + '/');
