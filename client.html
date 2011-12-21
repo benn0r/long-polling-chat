@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-	<title>Insert title here</title>
+	<title>Chat Client</title>
 	<script type="text/javascript" src="jquery.js"></script>
 	<script type="text/javascript">
 		var fetch = function() {
@@ -12,9 +12,17 @@
 			});
 		};
 		
+		var username = '';
+		
 		var push = function() {
-			$.get('http://localhost:1007/push?message=' + $('input[name=message]').val(), function(result) {
+			$.get('http://localhost:1007/push?message=' + $('input[name=message]').val() + '&user=' + username, function(result) {
 				$('input[name=message]').val('');
+			});
+		};
+		
+		var register = function() {
+			$.get('http://localhost:1007/register?username=' + $('input[name=username]').val(), function(result) {
+				username = result;
 			});
 		};
 	
@@ -26,8 +34,13 @@
 					push();
 				}
 			});
+			
 			$('input[name=send]').click(function(e) {
 				push();
+			});
+			
+			$('input[name=register]').click(function(e) {
+				register();
 			});
 		});
 	</script>
@@ -42,8 +55,10 @@
 <body>
 	<div id="chatbox"></div>
 	<form action="" method="post" onsubmit="return false;">
-		<input type="text" name="message" />
-		<input type="button" name="send" value="Send" />
+		<p><input type="text" name="message" />
+		<input type="button" name="send" value="Send" /></p>
+		<p><input type="text" name="username" />
+		<input type="button" name="register" value="Register" /></p>
 	</form>
 </body>
 </html>

@@ -11,15 +11,18 @@ var http = require('http');
 var sys = require('util');
 var url = require('url');
 var fs = require('fs');
+var crypto = require('crypto');
+var qs = require('querystring');
 
 var port = 1007; // server port
-var clients = new Array(); // list with all connected clients
+var clients = []; // list with all connected clients
 var messages = [];
+var users = [];
 
 var message = ''; // active message
 
 http.createServer(function (request, response) {
-	var urlparts = url.parse(request.url);
+	var urlparts = url.parse(request.url, true);
 	//console.log(urlparts.pathname);
 	
 	switch (urlparts.pathname) {
@@ -37,15 +40,25 @@ http.createServer(function (request, response) {
 			});
 
 			break;
-		case '/push':
-			// very very hawt, yay
-			message = urlparts.query.replace('message=', '');
-			console.log('client pushed new message: ' + message);
+		case '/register':
+			// generate very unique hash for the user
+			var hash = crypto.createHash('md5');
+			hash.update(urlparts.query['username']);
+			var md5 = hash.digest('hex');
 			
-			send();
+			response.writeHead(200, {'Content-Type': 'text/plain'});
+			
+			response.end(md5); // send hash to client
+			users[md5] = urlparts.query['username']; // save hash for later use
+			break;
+		case '/push':
+			message = users[urlparts.query['user']] + ': ' + urlparts.query['message'];
+			console.log('client pushed new message: ' + message);
 			
 			response.writeHead(200, {'Content-Type': 'text/plain'});
 			response.end('thx\n');
+			
+			send();
 			break;
 		case '/fetch':
 			// register client
