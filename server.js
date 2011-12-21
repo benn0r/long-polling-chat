@@ -40,6 +40,11 @@ http.createServer(function (request, response) {
 			});
 
 			break;
+			
+		/**
+		 * Called form client with parameter "username"
+		 * Returns an unique md5 hash
+		 */
 		case '/register':
 			// generate very unique hash for the user
 			var hash = crypto.createHash('md5');
@@ -52,7 +57,7 @@ http.createServer(function (request, response) {
 			users[md5] = urlparts.query['username']; // save hash for later use
 			break;
 		case '/push':
-			message = users[urlparts.query['user']] + ': ' + urlparts.query['message'];
+			message = '{"user":"' + users[urlparts.query['user']] + '","message":"' + urlparts.query['message'] + '"}';
 			console.log('client pushed new message: ' + message);
 			
 			response.writeHead(200, {'Content-Type': 'text/plain'});

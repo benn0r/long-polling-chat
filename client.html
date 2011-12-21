@@ -6,9 +6,17 @@
 	<script type="text/javascript" src="jquery.js"></script>
 	<script type="text/javascript">
 		var fetch = function() {
-			$.get('http://localhost:1007/fetch', function(result) {
-				$('#chatbox').prepend('<p>' + result + '</p>');
-				fetch();
+			$.ajax({
+				url: 'http://localhost:1007/fetch',
+				context: document.body,
+				success: function(result) {
+					var json = jQuery.parseJSON(result);
+					$('#chatbox').prepend('<p><strong>' + json.user + '</strong>: ' + json.message + '</p>');
+					fetch();
+				},
+				error: function() {
+					//fetch();
+				}
 			});
 		};
 		
