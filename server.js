@@ -46,6 +46,7 @@ http.createServer(function (request, response) {
 			for (var i = 0; i < clients.length; i++) {
 				var client = clients[i];
 				client.messages.push(message);
+				console.log('  ' + client.hash + ': ' + client.messages.length);
 			}
 			
 			response.writeHead(200, {'Content-Type': 'text/plain'});
@@ -61,6 +62,8 @@ http.createServer(function (request, response) {
 				if (clients[i].hash == urlparts.query['user']) {
 					client = clients[i];
 					clients[i].response = response;
+					
+					console.log('welcome back');
 				}
 			}
 			
@@ -71,9 +74,8 @@ http.createServer(function (request, response) {
 				client.messages = new Array();
 				
 				clients.push(client);
+				console.log('new client connected');
 			}
-			
-			console.log('client waiting for messages');
 			break;
 		default:
 			// check if file exists
@@ -117,6 +119,9 @@ function send() {
 			// reset messages and response
 			client.messages = new Array();
 			client.response = null;
+			
+			// really needed?
+			clients[i] = client;
 		}
 	}
 }

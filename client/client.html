@@ -8,16 +8,28 @@
 		var username = '';
 	
 		var fetch = function() {
+			$('#debug').html('Connected...');
+			
 			$.ajax({
 				url: '/fetch?user=' + username,
 				context: document.body,
 				success: function(result) {
-					var json = jQuery.parseJSON(result);
-					$('#chatbox').prepend('<p><strong>' + json.user + '</strong>: ' + json.message + '</p>');
+					$('#debug').html('Response received!');
+										
+					var result = result.split('\n');
+					for (var i = 0; i < (result.length - 2); i++) {
+						var json = jQuery.parseJSON(result[i]);
+						$('#chatbox').prepend('<p><strong>' + json.user + '</strong>: ' + json.message + '</p>');
+					}
+										
 					fetch();
 				},
 				error: function() {
-					fetch();
+					$('#debug').html('Error!');
+					
+					setTimeout(function() {
+						fetch();
+					}, 1000);
 				}
 			});
 		};
@@ -63,7 +75,7 @@
 	<div id="chatbox"></div>
 	<form action="" method="post" onsubmit="return false;">
 		<p><input type="text" name="message" />
-		<input type="button" name="send" value="Send" /></p>
+		<input type="button" name="send" value="Send" /> <span id="debug"></span></p>
 		<p><input type="text" name="username" />
 		<input type="button" name="register" value="Register" /></p>
 	</form>
