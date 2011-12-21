@@ -14,7 +14,7 @@ var fs = require('fs');
 var crypto = require('crypto');
 var qs = require('querystring');
 
-var port = 1007; // server port
+var port = 80; // server port
 var clients = []; // list with all connected clients
 var messages = [];
 var users = [];
