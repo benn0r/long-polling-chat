@@ -40,7 +40,7 @@ http.createServer(function (request, response) {
 			users[md5] = urlparts.query['username']; // save hash for later use
 			break;
 		case '/push':
-			var message = '{"user":"' + users[urlparts.query['user']] + '","message":"' + urlparts.query['message'] + '"}';
+			var message = '{"user":"' + users[urlparts.query['user']] + '","message":"' + urlparts.query['message'].replace(/"/gi, '\\"') + '"}';
 			console.log('client pushed new message: ' + message);
 			
 			for (var i = 0; i < clients.length; i++) {
