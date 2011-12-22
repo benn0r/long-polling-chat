@@ -129,7 +129,7 @@ http.createServer(function (request, response) {
 					} else if (urlparts.pathname.indexOf('.html') != -1) {
 						response.writeHead(200, {'Content-Type': 'text/html'});
 					} else if (urlparts.pathname.indexOf('.css') != -1) {
-						response.writeHead(200, {'Content-Type': 'text/stylesheet'});
+						response.writeHead(200, {'Content-Type': 'text/css'});
 					}
 					response.end(data);
 				} else {
