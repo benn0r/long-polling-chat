@@ -38,7 +38,7 @@
 					var date = new Date();
 					date.setTime(m.time);
 					var time = date.getHours() + ':' + date.getMinutes();
-					$('#chatbox').append('<p><strong>' + m.user + '</strong> [' + time + ']: ' + m.message + '</p>');
+					$('#chatbox').append('<p><span class="username">' + htmlspecialchars(m.user) + '</span> <span class="time">[' + time + ']</span>: ' + htmlspecialchars(m.message) + '</p>');
 				}
 				
 				$("#chatbox").scrollTop($("#chatbox")[0].scrollHeight);
@@ -49,7 +49,7 @@
 		};
 	
 		var fetch = function() {
-			$('#debug').html('Connected...');
+			$('#debug').html('Connected!');
 			
 			$.ajax({
 				url: '/fetch?u=' + u,
@@ -65,7 +65,7 @@
 							var date = new Date();
 							date.setTime(m.time);
 							var time = date.getHours() + ':' + date.getMinutes();
-							$('#chatbox').append('<p><strong>' + m.user + '</strong> [' + time + ']: ' + m.message + '</p>');
+							$('#chatbox').append('<p><span class="username">' + htmlspecialchars(m.user) + '</span> <span class="time">[' + time + ']</span>: ' + htmlspecialchars(m.message) + '</p>');
 						}
 						
 						$("#chatbox").scrollTop($("#chatbox")[0].scrollHeight);
@@ -84,9 +84,13 @@
 		};
 		
 		var push = function() {
-			$.get('/push?m=' + $('input[name=message]').val() + '&u=' + u, function(result) {
-				$('input[name=message]').val('');
-			});
+			if ($('input[name=message]').val()) {
+				$.get('/push?m=' + $('input[name=message]').val() + '&u=' + u, function(result) {
+					$('input[name=message]').val('');
+				});
+			} else {
+				$('input[name=message]').focus();
+			}
 		};
 		
 		/*var register = function() {
@@ -109,26 +113,30 @@
 			
 			fetchall();
 		});
+		
+		   function htmlspecialchars(str,typ) {
+			     if(typeof str=="undefined") str="";
+			     if(typeof typ!="number") typ=2;
+			     typ=Math.max(0,Math.min(3,parseInt(typ)));
+			     var from=new Array(/&/g,/</g,/>/g);
+			     var to=new Array("&amp;","&lt;","&gt;");
+			     if(typ==1 || typ==3) {from.push(/'/g); to.push("&#039;");}
+			     if(typ==2 || typ==3) {from.push(/"/g); to.push("&quot;");}
+			     for(var i in from) str=str.replace(from[i],to[i]);
+			    return str;
+			  }
 	</script>
 	<style type="text/css">
-	#chatbox {
-		width: 500px;
-		height: 200px;
-		overflow: auto;
-		padding: 0px;
-		margin: 0px;
-	}
-	p {
-		padding: 0px 0px 5px 0px;
-		margin: 0px;
-	}
+
 	</style>
+	<link rel="stylesheet" type="text/css" href="reset.css" />
+	<link rel="stylesheet" type="text/css" href="styles.css" />
 </head>
 <body>
 	<div id="chatbox"></div>
 	<form action="" method="post" onsubmit="return false;">
-		<p><input type="text" name="message" />
-		<input type="button" name="send" value="Send" /> <span id="debug"></span></p>
+		<input type="text" name="message" class="message" />
+		<input type="button" name="send" value="Send" class="button" /> <span id="debug"></span>
 	</form>
 </body>
 </html>
