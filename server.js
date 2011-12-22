@@ -56,11 +56,6 @@ http.createServer(function (request, response) {
 			var hash = crypto.createHash('md5');
 			hash.update(urlparts.query['username']);
 			var md5 = hash.digest('hex');
-			
-			response.writeHead(200, {'Content-Type': 'text/plain'});
-			
-			response.end(md5); // send hash to client
-			users[md5] = urlparts.query['username']; // save hash for later use
 			break;
 		case '/push':
 			// replace " with \" (" will destroy the beautiful json)
