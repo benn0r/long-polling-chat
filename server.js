@@ -1,4 +1,6 @@
 /**
+ * Copyright (C) 2011 benn0r <benjamin@benn0r.ch>
+ * 
  * This file is part of benn0rchat.
  * 
  * benn0rchat is free software: you can redistribute it and/or modify
